@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Menu | Personal Performance Hub</title>
+    <meta name="description" content="Access your fitness and tracking tools from one central hub.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --secondary: #ec4899;
+            --secondary-glow: rgba(236, 72, 153, 0.4);
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 40%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #818cf8, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .menu-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 40px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--card-accent), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+        }
+
+        .menu-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .card-pathfinder { --card-accent: var(--primary); }
+        .card-isometric { --card-accent: var(--secondary); }
+
+        .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--card-accent);
+            transition: all 0.4s;
+            position: relative;
+            z-index: 2;
+        }
+
+        .menu-card:hover .icon-wrapper {
+            background: var(--card-accent);
+            color: white;
+            transform: rotate(10deg);
+            box-shadow: 0 0 30px var(--card-accent-glow);
+        }
+
+        .card-pathfinder { --card-accent-glow: var(--primary-glow); }
+        .card-isometric { --card-accent-glow: var(--secondary-glow); }
+
+        .menu-card h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .menu-card p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            position: relative;
+            z-index: 2;
+        }
+
+        .arrow-icon {
+            margin-top: 24px;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.4s;
+            color: var(--card-accent);
+            position: relative;
+            z-index: 2;
+        }
+
+        .menu-card:hover .arrow-icon {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2.5rem; }
+            .menu-grid { grid-template-columns: 1fr; }
+            .menu-card { padding: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Performance Hub</h1>
+            <div class="subtitle">Select Your Tool</div>
+        </header>
+
+        <div class="menu-grid">
+            <a href="distance.html" class="menu-card card-pathfinder">
+                <div class="icon-wrapper">
+                    <i data-lucide="map-pin" size="40"></i>
+                </div>
+                <h2>Pathfinder</h2>
+                <p>Track your walking or running distance in real-time with precision GPS tracking and session history.</p>
+                <div class="arrow-icon">
+                    <i data-lucide="arrow-right"></i>
+                </div>
+            </a>
+
+            <a href="iso.html" class="menu-card card-isometric">
+                <div class="icon-wrapper">
+                    <i data-lucide="zap" size="40"></i>
+                </div>
+                <h2>Isometric Pro</h2>
+                <p>Optimize your strength training with automated progression, multi-user profiles, and performance tracking.</p>
+                <div class="arrow-icon">
+                    <i data-lucide="arrow-right"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
