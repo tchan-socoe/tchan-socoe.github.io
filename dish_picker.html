@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dish Picker | Performance Hub</title>
+    <meta name="description" content="Pick random dishes from customizable menus with premium slot-machine animations.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #818cf8;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.3);
+            --secondary: #ec4899;
+            --secondary-glow: rgba(236, 72, 153, 0.3);
+            --bg: #0b0f19;
+            --sidebar-bg: rgba(15, 23, 42, 0.6);
+            --card-bg: rgba(30, 41, 59, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.2);
+            --font-ui: 'Plus Jakarta Sans', sans-serif;
+            --font-heading: 'Outfit', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 5% 5%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 95% 95%, rgba(236, 72, 153, 0.08) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* App Container Layout */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        @media (max-width: 1024px) {
+            .app-container {
+                flex-direction: column;
+                height: auto;
+            }
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 320px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--card-border);
+                height: auto;
+            }
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .home-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            transition: color 0.2s;
+        }
+
+        .home-link:hover {
+            color: var(--primary);
+        }
+
+        .app-title {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #818cf8, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Menu Management Container */
+        .menu-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .menu-item {
+            width: 100%;
+            background: transparent;
+            border: 1px solid transparent;
+            text-align: left;
+            padding: 1rem;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+        }
+
+        .menu-item.active {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--text-main);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+        }
+
+        .menu-item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .menu-item-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .menu-item-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .menu-action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .menu-action-btn:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Quick Add Menu Box */
+        .add-menu-box {
+            padding: 1rem;
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-text {
+            flex: 1;
+            padding: 0.6rem 0.8rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-text:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .btn-icon {
+            background: var(--primary);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Main Content Workspace */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                height: auto;
+                padding: 1.25rem;
+            }
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+            align-items: start;
+            flex: 1;
+        }
+
+        @media (max-width: 1024px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glassmorphic Cards */
+        .panel-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 1.75rem;
+            box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: relative;
+        }
+
+        .panel-title {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.75rem;
+        }
+
+        /* Slot Machine Style Picker Wheel Container */
+        .picker-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            background: rgba(10, 15, 26, 0.6);
+            border-radius: 20px;
+            border: 1px solid var(--card-border);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Visual slot window */
+        .slot-window {
+            height: 120px;
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(15,23,42,0.8) 50%, rgba(0,0,0,0.5) 100%);
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.8);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Accent indicators/lines for selection area */
+        .slot-pointer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 48px;
+            top: calc(50% - 24px);
+            border-top: 1px solid var(--secondary);
+            border-bottom: 1px solid var(--secondary);
+            background: rgba(236, 72, 153, 0.05);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .slot-pointer::before, .slot-pointer::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 8px solid transparent;
+        }
+
+        .slot-pointer::before {
+            left: 8px;
+            border-left-color: var(--secondary);
+        }
+
+        .slot-pointer::after {
+            right: 8px;
+            border-right-color: var(--secondary);
+        }
+
+        /* Spinning list */
+        .slot-list {
+            position: absolute;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            transition: transform 0.1s ease-out;
+            will-change: transform;
+        }
+
+        .slot-item {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-heading);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: center;
+            padding: 0 24px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0.3;
+            transform: scale(0.8);
+            transition: all 0.2s;
+        }
+
+        .slot-item.active-slot {
+            opacity: 1;
+            transform: scale(1.1);
+            color: var(--primary);
+            text-shadow: 0 0 15px rgba(129, 140, 248, 0.6);
+        }
+
+        /* Big Roll Button */
+        .roll-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 1.2rem 3rem;
+            border-radius: 50px;
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 25px rgba(236, 72, 153, 0.3);
+        }
+
+        .roll-btn:hover:not(:disabled) {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 15px 30px rgba(236, 72, 153, 0.5);
+        }
+
+        .roll-btn:active:not(:disabled) {
+            transform: scale(0.98) translateY(0);
+        }
+
+        .roll-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+
+        /* Dish List Manager Section */
+        .dish-manager {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .dish-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .dish-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .dish-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .dish-chip {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .dish-chip:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .dish-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Session History List */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 12px;
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+
+        .history-item-icon {
+            color: var(--accent-green);
+        }
+
+        .history-item-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-item-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .history-item-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .history-empty {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 2rem 0;
+            font-size: 0.9rem;
+        }
+
+        /* Custom Confetti Overlay */
+        .confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Utility classes */
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 3rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .empty-state-icon {
+            color: var(--primary);
+            background: rgba(129, 140, 248, 0.08);
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar / Menu List -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="menu.html" class="home-link">
+                <i data-lucide="arrow-left" size="16"></i> Back to Hub
+            </a>
+            <h1 class="app-title">
+                <i data-lucide="utensils" size="24"></i> Dish Picker
+            </h1>
+        </div>
+
+        <div class="section-title">My Menus</div>
+        <div class="menu-list-container" id="menuList">
+            <!-- Menus will be generated here -->
+        </div>
+
+        <div class="add-menu-box">
+            <input type="text" id="newMenuInput" class="input-text" placeholder="Create new menu...">
+            <button class="btn-icon" id="addMenuBtn">
+                <i data-lucide="plus" size="18"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+        <!-- Grid layout -->
+        <div class="workspace-grid">
+            <!-- Left: Picker Panel & Dish Editor -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                
+                <!-- Roll & Selection Panel -->
+                <div class="panel-card">
+                    <div class="panel-title" id="activeMenuTitle">
+                        <i data-lucide="shuffle" size="20"></i> What to Eat?
+                    </div>
+
+                    <!-- Picker Area -->
+                    <div class="picker-container" id="pickerContainer">
+                        <canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+                        
+                        <div class="slot-window">
+                            <div class="slot-pointer"></div>
+                            <div class="slot-list" id="slotList">
+                                <div class="slot-item">Add dishes first!</div>
+                            </div>
+                        </div>
+
+                        <button class="roll-btn" id="rollBtn" disabled>
+                            <i data-lucide="dice-5" size="20"></i> Pick a Dish!
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dish Manager Panel -->
+                <div class="panel-card" id="dishManagerCard">
+                    <div class="panel-title">
+                        <i data-lucide="list-plus" size="20"></i> Edit Dishes
+                    </div>
+
+                    <div class="dish-manager">
+                        <div class="add-menu-box" style="padding: 0; border-top: none;">
+                            <input type="text" id="newDishInput" class="input-text" placeholder="Add new dish...">
+                            <button class="btn-icon" id="addDishBtn">
+                                <i data-lucide="plus" size="18"></i>
+                            </button>
+                        </div>
+
+                        <div class="dish-list" id="dishList">
+                            <!-- Dishes will be listed here -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right: Session History -->
+            <div class="panel-card">
+                <div class="panel-title">
+                    <i data-lucide="history" size="20"></i> Picked History
+                </div>
+                
+                <div class="history-list" id="historyList">
+                    <div class="history-empty">No dishes picked this session yet.</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // ----------------------------------------------------
+    // Application State
+    // ----------------------------------------------------
+    let state = {
+        menus: [],
+        activeMenuId: null,
+        history: []
+    };
+
+    // Load initial data
+    function loadState() {
+        const localData = localStorage.getItem('dish_picker_state');
+        if (localData) {
+            try {
+                state.menus = JSON.parse(localData);
+            } catch (e) {
+                console.error("Error parsing localStorage data:", e);
+                state.menus = [];
+            }
+        }
+        
+        // If empty, create standard default menus
+        if (state.menus.length === 0) {
+            state.menus = [
+                {
+                    id: '1',
+                    name: 'Fast Food',
+                    dishes: ['Burger', 'Pizza', 'Fried Chicken', 'Tacos', 'Sushi', 'Subway Sandwich']
+                },
+                {
+                    id: '2',
+                    name: 'Healthy Lunch',
+                    dishes: ['Chicken Salad', 'Quinoa Bowl', 'Grilled Salmon', 'Tofu Stir Fry', 'Avocado Wrap']
+                }
+            ];
+            saveState();
+        }
+
+        state.activeMenuId = state.menus[0]?.id || null;
+    }
+
+    function saveState() {
+        localStorage.setItem('dish_picker_state', JSON.stringify(state.menus));
+    }
+
+    // ----------------------------------------------------
+    // DOM Elements
+    // ----------------------------------------------------
+    const menuList = document.getElementById('menuList');
+    const newMenuInput = document.getElementById('newMenuInput');
+    const addMenuBtn = document.getElementById('addMenuBtn');
+    
+    const activeMenuTitle = document.getElementById('activeMenuTitle');
+    const slotList = document.getElementById('slotList');
+    const rollBtn = document.getElementById('rollBtn');
+    const dishList = document.getElementById('dishList');
+    const newDishInput = document.getElementById('newDishInput');
+    const addDishBtn = document.getElementById('addDishBtn');
+    const historyList = document.getElementById('historyList');
+    const dishManagerCard = document.getElementById('dishManagerCard');
+    const confettiCanvas = document.getElementById('confettiCanvas');
+
+    // Audio Context for beeps during spinning
+    let audioCtx = null;
+    function playBeep(frequency, duration) {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {
+            // Silence any audio block issues
+        }
+    }
+
+    // Confetti Effect
+    let confetti = [];
+    const ctx = confettiCanvas.getContext('2d');
+    let confettiActive = false;
+
+    function resizeConfettiCanvas() {
+        const rect = confettiCanvas.parentElement.getBoundingClientRect();
+        confettiCanvas.width = rect.width;
+        confettiCanvas.height = rect.height;
+    }
+
+    window.addEventListener('resize', resizeConfettiCanvas);
+
+    function createConfettiPiece() {
+        const colors = ['#818cf8', '#ec4899', '#10b981', '#f59e0b', '#3b82f6'];
+        return {
+            x: confettiCanvas.width / 2 + (Math.random() * 40 - 20),
+            y: confettiCanvas.height / 2 + (Math.random() * 40 - 20),
+            vx: (Math.random() - 0.5) * 8,
+            vy: -Math.random() * 6 - 4, // shoot up
+            size: Math.random() * 8 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            rotationSpeed: Math.random() * 8 - 4
+        };
+    }
+
+    function triggerConfetti() {
+        resizeConfettiCanvas();
+        confetti = Array.from({ length: 80 }, createConfettiPiece);
+        if (!confettiActive) {
+            confettiActive = true;
+            animateConfetti();
+        }
+    }
+
+    function animateConfetti() {
+        if (!confettiActive) return;
+        ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        let piecesLeft = false;
+
+        confetti.forEach((p) => {
+            if (p.y < confettiCanvas.height + 20 && p.x > -20 && p.x < confettiCanvas.width + 20) {
+                piecesLeft = true;
+                p.vy += 0.2; // gravity
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rotation += p.rotationSpeed;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation * Math.PI / 180);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+            }
+        });
+
+        if (piecesLeft) {
+            requestAnimationFrame(animateConfetti);
+        } else {
+            confettiActive = false;
+        }
+    }
+
+    // ----------------------------------------------------
+    // Rendering & Logic
+    // ----------------------------------------------------
+    function getActiveMenu() {
+        return state.menus.find(m => m.id === state.activeMenuId);
+    }
+
+    function renderMenus() {
+        menuList.innerHTML = '';
+        state.menus.forEach(menu => {
+            const isActive = menu.id === state.activeMenuId;
+            const item = document.createElement('div');
+            item.className = `menu-item ${isActive ? 'active' : ''}`;
+            item.onclick = () => {
+                state.activeMenuId = menu.id;
+                render();
+            };
+
+            const details = document.createElement('div');
+            details.className = 'menu-item-details';
+
+            const name = document.createElement('span');
+            name.className = 'menu-item-name';
+            name.textContent = menu.name;
+
+            const count = document.createElement('span');
+            count.className = 'menu-item-count';
+            count.textContent = `${menu.dishes.length} dishes`;
+
+            details.appendChild(name);
+            details.appendChild(count);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'menu-action-btn';
+            deleteBtn.innerHTML = '<i data-lucide="trash-2" size="16"></i>';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                deleteMenu(menu.id);
+            };
+
+            item.appendChild(details);
+            item.appendChild(deleteBtn);
+            menuList.appendChild(item);
+        });
+        lucide.createIcons();
+    }
+
+    function renderActiveMenuContent() {
+        const menu = getActiveMenu();
+        if (!menu) {
+            activeMenuTitle.innerHTML = `<i data-lucide="shuffle" size="20"></i> Select or Create a Menu`;
+            dishManagerCard.classList.add('hidden');
+            slotList.innerHTML = '<div class="slot-item">Select a menu</div>';
+            rollBtn.disabled = true;
+            return;
+        }
+
+        dishManagerCard.classList.remove('hidden');
+        activeMenuTitle.innerHTML = `<i data-lucide="shuffle" size="20"></i> Roll from: ${menu.name}`;
+
+        // Populate slot list preview
+        if (menu.dishes.length === 0) {
+            slotList.innerHTML = '<div class="slot-item">Add dishes!</div>';
+            rollBtn.disabled = true;
+        } else {
+            // Show first item as default preview
+            slotList.style.transform = 'translateY(0)';
+            slotList.innerHTML = `<div class="slot-item active-slot">${menu.dishes[0]}</div>`;
+            rollBtn.disabled = false;
+        }
+
+        // Render dish listing
+        dishList.innerHTML = '';
+        menu.dishes.forEach((dish, idx) => {
+            const chip = document.createElement('div');
+            chip.className = 'dish-chip';
+
+            const name = document.createElement('span');
+            name.className = 'dish-name';
+            name.textContent = dish;
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'menu-action-btn';
+            deleteBtn.innerHTML = '<i data-lucide="trash-2" size="14"></i>';
+            deleteBtn.onclick = () => deleteDish(idx);
+
+            chip.appendChild(name);
+            chip.appendChild(deleteBtn);
+            dishList.appendChild(chip);
+        });
+        lucide.createIcons();
+    }
+
+    function renderHistory() {
+        if (state.history.length === 0) {
+            historyList.innerHTML = '<div class="history-empty">No dishes picked this session yet.</div>';
+            return;
+        }
+
+        historyList.innerHTML = '';
+        state.history.slice().reverse().forEach(item => {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+
+            const icon = document.createElement('div');
+            icon.className = 'history-item-icon';
+            icon.innerHTML = '<i data-lucide="check-circle-2" size="18"></i>';
+
+            const details = document.createElement('div');
+            details.className = 'history-item-details';
+
+            const name = document.createElement('span');
+            name.className = 'history-item-name';
+            name.textContent = item.dishName;
+
+            const time = document.createElement('span');
+            time.className = 'history-item-time';
+            time.textContent = `from ${item.menuName} • ${item.time}`;
+
+            details.appendChild(name);
+            details.appendChild(time);
+
+            historyItem.appendChild(icon);
+            historyItem.appendChild(details);
+            historyList.appendChild(historyItem);
+        });
+        lucide.createIcons();
+    }
+
+    function render() {
+        renderMenus();
+        renderActiveMenuContent();
+        renderHistory();
+    }
+
+    // ----------------------------------------------------
+    // Actions / Mutations
+    // ----------------------------------------------------
+    function addMenu() {
+        const name = newMenuInput.value.trim();
+        if (!name) return;
+        const newMenu = {
+            id: Date.now().toString(),
+            name: name,
+            dishes: []
+        };
+        state.menus.push(newMenu);
+        state.activeMenuId = newMenu.id;
+        newMenuInput.value = '';
+        saveState();
+        render();
+    }
+
+    function deleteMenu(id) {
+        state.menus = state.menus.filter(m => m.id !== id);
+        if (state.activeMenuId === id) {
+            state.activeMenuId = state.menus[0]?.id || null;
+        }
+        saveState();
+        render();
+    }
+
+    function addDish() {
+        const menu = getActiveMenu();
+        if (!menu) return;
+        const dishName = newDishInput.value.trim();
+        if (!dishName) return;
+        menu.dishes.push(dishName);
+        newDishInput.value = '';
+        saveState();
+        render();
+    }
+
+    function deleteDish(index) {
+        const menu = getActiveMenu();
+        if (!menu) return;
+        menu.dishes.splice(index, 1);
+        saveState();
+        render();
+    }
+
+    // Slot Machine Animation Logic
+    function rollDish() {
+        const menu = getActiveMenu();
+        if (!menu || menu.dishes.length === 0) return;
+
+        rollBtn.disabled = true;
+        const dishes = menu.dishes;
+
+        // Build a long sequence of dishes for the spinning effect
+        const spinCount = 25; // Number of items we slide past
+        const spinItems = [];
+        for (let i = 0; i < spinCount; i++) {
+            spinItems.push(dishes[i % dishes.length]);
+        }
+        
+        // Pick the actual winner randomly
+        const winnerIndex = Math.floor(Math.random() * dishes.length);
+        spinItems.push(dishes[winnerIndex]);
+
+        // Populate slot items
+        slotList.innerHTML = spinItems.map((dish, idx) => `
+            <div class="slot-item ${idx === spinItems.length - 1 ? 'winner-target' : ''}" style="height: 120px;">
+                ${dish}
+            </div>
+        `).join('');
+
+        // Reset positions
+        const itemHeight = 120; // 120px per item
+        slotList.style.transition = 'none';
+        slotList.style.transform = 'translateY(0px)';
+
+        // Force a layout reflow to register the reset
+        slotList.offsetHeight;
+
+        // Animate translate negative to bring the target index into the center
+        // Center alignment is when target is in the window (offset index * itemHeight)
+        const targetOffset = -(spinItems.length - 1) * itemHeight;
+
+        slotList.style.transition = 'transform 3.5s cubic-bezier(0.1, 0.8, 0.1, 1)';
+        slotList.style.transform = `translateY(${targetOffset}px)`;
+
+        // Play ticking sounds at increasing intervals
+        let elapsed = 0;
+        const tickCount = 18;
+        for (let i = 0; i < tickCount; i++) {
+            // Cubic scaling for timing intervals to slow down at the end
+            const delay = Math.pow(i / tickCount, 2) * 3200;
+            setTimeout(() => {
+                playBeep(440 + i * 20, 0.05);
+                
+                // Highlight item close to center if needed
+                const activeIdx = Math.min(Math.floor(i * (spinItems.length / tickCount)), spinItems.length - 1);
+                const items = slotList.querySelectorAll('.slot-item');
+                items.forEach((item, id) => {
+                    if (id === activeIdx) {
+                        item.classList.add('active-slot');
+                    } else {
+                        item.classList.remove('active-slot');
+                    }
+                });
+            }, delay);
+        }
+
+        // Animation completes
+        setTimeout(() => {
+            // Add winner styling
+            const items = slotList.querySelectorAll('.slot-item');
+            items.forEach(item => item.classList.remove('active-slot'));
+            const winnerItem = items[items.length - 1];
+            if (winnerItem) {
+                winnerItem.classList.add('active-slot');
+            }
+
+            const chosenDish = dishes[winnerIndex];
+            playBeep(880, 0.35); // Winner bell sound
+            triggerConfetti();
+
+            // Log history
+            const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            state.history.push({
+                dishName: chosenDish,
+                menuName: menu.name,
+                time: timeString
+            });
+
+            renderHistory();
+            rollBtn.disabled = false;
+        }, 3600);
+    }
+
+    // ----------------------------------------------------
+    // Event Listeners
+    // ----------------------------------------------------
+    addMenuBtn.addEventListener('click', addMenu);
+    newMenuInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addMenu();
+    });
+
+    addDishBtn.addEventListener('click', addDish);
+    newDishInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addDish();
+    });
+
+    rollBtn.addEventListener('click', rollDish);
+
+    // Initial setup
+    loadState();
+    render();
+</script>
+
+</body>
+</html>

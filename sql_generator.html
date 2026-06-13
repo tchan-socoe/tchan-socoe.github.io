@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Template Generator | Performance Hub</title>
+    <meta name="description" content="Generate complex SQL statements dynamically using customizable templates and variable inputs.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.3);
+            --secondary: #ec4899;
+            --bg: #0b0f19;
+            --sidebar-bg: rgba(15, 23, 42, 0.6);
+            --card-bg: rgba(30, 41, 59, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --font-ui: 'Plus Jakarta Sans', sans-serif;
+            --font-heading: 'Outfit', sans-serif;
+            --font-code: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 5% 5%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 95% 95%, rgba(236, 72, 153, 0.08) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* App Container Layout */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 320px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .home-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            transition: color 0.2s;
+        }
+
+        .home-link:hover {
+            color: var(--primary);
+        }
+
+        .app-title {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #818cf8, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-container {
+            padding: 1rem 1.5rem;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 2.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .generator-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem 1rem;
+        }
+
+        .generator-list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .generator-list-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .generator-item {
+            width: 100%;
+            background: transparent;
+            border: none;
+            text-align: left;
+            padding: 1rem;
+            border-radius: 14px;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+            transition: all 0.25s ease;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .generator-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+        }
+
+        .generator-item.active {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--text-main);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+        }
+
+        .generator-item-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .generator-item-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Main Workspace Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
+            background: rgba(10, 15, 26, 0.2);
+            padding: 2rem;
+        }
+
+        .header-section {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .header-text h2 {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .header-text p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Grid layout for workspace elements */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+            flex: 1;
+        }
+
+        @media (max-width: 1024px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glassmorphic Panel Card */
+        .panel-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 1.75rem;
+            box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel-title {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.75rem;
+        }
+
+        /* Tabs Selection */
+        .tabs-container {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 0.25rem;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-family: var(--font-ui);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        /* Variable Inputs Form */
+        .variables-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+            font-family: var(--font-code);
+        }
+
+        /* Helper buttons below inputs */
+        .input-helpers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .helper-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .helper-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            border-color: var(--text-muted);
+        }
+
+        .helper-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* Output Code Card */
+        .output-card {
+            display: flex;
+            flex-direction: column;
+            background: rgba(10, 15, 26, 0.7);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.4);
+        }
+
+        .output-header {
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .output-title-text {
+            font-family: var(--font-heading);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .copy-btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-family: var(--font-ui);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn.copied {
+            background: var(--accent-green);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .code-container {
+            padding: 1.5rem;
+            overflow-x: auto;
+            background: transparent;
+            min-height: 250px;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        code {
+            font-family: var(--font-code);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* SQL Syntax Highlight classes */
+        .sql-keyword { color: #818cf8; font-weight: 600; }
+        .sql-string { color: #34d399; }
+        .sql-number { color: #fb923c; }
+        .sql-variable { color: #f472b6; font-weight: 600; border-bottom: 1px dotted rgba(244, 114, 182, 0.4); }
+        .sql-comment { color: #64748b; font-style: italic; }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            height: 60vh;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-state h3 {
+            font-family: var(--font-heading);
+            color: var(--text-main);
+            font-size: 1.5rem;
+        }
+
+        /* Sidebar Toggle Button for mobile responsiveness */
+        .menu-toggle {
+            display: none;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: flex;
+            }
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                padding: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <a href="menu.html" class="home-link" style="margin-bottom: 0;">
+                    <i data-lucide="arrow-left" size="16"></i> Back to Hub
+                </a>
+                <a href="update2selectjson.html" class="home-link" style="margin-bottom: 0;">
+                    Converter <i data-lucide="arrow-right" size="16"></i>
+                </a>
+            </div>
+            <h1 class="app-title">
+                <i data-lucide="database" size="24"></i> SQL Generator
+            </h1>
+        </div>
+
+        <div class="search-container">
+            <i data-lucide="search" class="search-icon" size="18"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search templates...">
+        </div>
+
+        <div class="generator-list-container" id="generatorList">
+            <!-- Dynamic sidebar items -->
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+        <!-- Workspace Header -->
+        <div class="header-section">
+            <button class="menu-toggle" id="menuToggle">
+                <i data-lucide="menu" size="20"></i>
+            </button>
+            <div class="header-text">
+                <h2 id="generatorTitle">Select a SQL Generator</h2>
+                <p id="generatorDesc">Choose a template from the sidebar to start generating structured SQL queries instantly.</p>
+            </div>
+        </div>
+
+        <!-- Dynamic Content Grid -->
+        <div class="workspace-grid" id="workspaceGrid" style="display: none;">
+            <!-- Left: Configurations Panel -->
+            <div class="panel-card">
+                <div>
+                    <span class="form-label" style="display:block; margin-bottom: 0.5rem;">Template Variation</span>
+                    <div class="tabs-container" id="templatesContainer">
+                        <!-- Dynamic variation tabs -->
+                    </div>
+                </div>
+
+                <div class="panel-title">
+                    <i data-lucide="sliders" size="20"></i> Variables & Options
+                </div>
+
+                <form class="variables-form" id="variablesForm" onsubmit="event.preventDefault();">
+                    <!-- Dynamic variable input fields -->
+                </form>
+            </div>
+
+            <!-- Right: Generated SQL Output -->
+            <div class="output-card">
+                <div class="output-header">
+                    <span class="output-title-text" id="activeTemplateName">Generated SQL</span>
+                    <button class="copy-btn" id="copyBtn">
+                        <i data-lucide="copy" size="16"></i> <span>Copy SQL</span>
+                    </button>
+                </div>
+                <div class="code-container">
+                    <pre><code id="sqlOutput"></code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">
+                <i data-lucide="terminal" size="40"></i>
+            </div>
+            <h3>No Generator Selected</h3>
+            <p>Select an option from the list to populate parameters and preview the generated SQL statement.</p>
+        </div>
+    </main>
+</div>
+
+<script>
+    // ----------------------------------------------------
+    // Data Definitions: Array of SQL Generator Objects
+    // ----------------------------------------------------
+    const sqlGenerators = [
+        {
+            id: "ap-application-info",
+            name: "AP Application Info",
+            description: "Query company users and profile details associated with an AP Application Number.",
+            variables: [
+                { name: "applicationNo", label: "Application No", type: "string", placeholder: "e.g. A506FG", default: "A506FG" }
+            ],
+            templates: [
+                {
+                    name: "AP Company User",
+                    sql: "SELECT \n    u.id,\n    u.email,\n    u.name,\n    COUNT(DISTINCT fc.id) as company_cnt \nFROM ap_applications aa \nINNER JOIN fwta_companies fc ON fc.id = aa.fwta_company_id \nINNER JOIN fwta_company_users fcu ON fcu.fwta_company_id = fc.id\nINNER JOIN users u ON u.id = fcu.user_id \nWHERE aa.application_no = '{{applicationNo}}'\nGROUP BY u.id;"
+                },
+                {
+                    name: "AP Company Details",
+                    sql: "SELECT \n    fc.id,\n    fc.name,\n    fc.email   \nFROM ap_applications aa \nINNER JOIN fwta_companies fc ON fc.id = aa.fwta_company_id\nWHERE aa.application_no = '{{applicationNo}}';"
+                }
+            ]
+        },
+        {
+            id: "user-company-details",
+            name: "User & Company Details",
+            description: "Retrieve complete user profile details aligned with their company parameters.",
+            variables: [
+                { name: "userId", label: "User ID", type: "string", placeholder: "e.g. USR-9082", default: "USR-9082" },
+                { name: "status", label: "Account Status", type: "select", options: ["Active", "Suspended", "Pending"], default: "Active" },
+                { name: "joinedAfter", label: "Registered Since", type: "date", default: "" }
+            ],
+            templates: [
+                {
+                    name: "Basic Identity info",
+                    sql: "SELECT \n    u.id,\n    u.username,\n    u.email,\n    c.company_name\nFROM users u\nINNER JOIN companies c ON u.company_id = c.id\nWHERE u.id = '{{userId}}'\n  AND u.status = '{{status}}'\n  {{joinedAfter ? \"AND u.created_at >= '\" + joinedAfter + \"'\" : \"\"}};"
+                },
+                {
+                    name: "Full Company Address details",
+                    sql: "SELECT \n    u.id,\n    u.username,\n    u.email,\n    c.*,\n    ca.address_line1,\n    ca.city,\n    ca.country\nFROM users u\nINNER JOIN companies c ON u.company_id = c.id\nLEFT JOIN company_addresses ca ON ca.company_id = c.id\nWHERE u.id = '{{userId}}'\n  AND u.status = '{{status}}'\n  {{joinedAfter ? \"AND u.created_at >= '\" + joinedAfter + \"'\" : \"\"}};"
+                }
+            ]
+        },
+        {
+            id: "transaction-search",
+            name: "Transaction & Audits",
+            description: "Query specific transactions with automatic formatting for long item lists.",
+            variables: [
+                { name: "transactionIds", label: "Transaction ID List", type: "list", placeholder: "Enter IDs (one per line)", default: "TXN-101\nTXN-102\nTXN-103" },
+                { name: "paymentMethod", label: "Payment Channel", type: "select", options: ["All Channels", "Credit Card", "Bank Transfer", "Crypto"], default: "All Channels" },
+                { name: "startDate", label: "Start Date/Time", type: "datetime", default: "" },
+                { name: "endDate", label: "End Date/Time", type: "datetime", default: "" }
+            ],
+            templates: [
+                {
+                    name: "Transactions Summary",
+                    sql: "SELECT \n    t.payment_channel,\n    COUNT(t.id) as txn_count,\n    SUM(t.amount) as total_volume\nFROM transactions t\nWHERE t.id IN ({{transactionIds}})\n  {{paymentMethod !== 'All Channels' ? \"AND t.payment_channel = '\" + paymentMethod + \"'\" : \"\"}}\n  {{startDate ? \"AND t.created_at >= '\" + startDate + \"'\" : \"\"}}\n  {{endDate ? \"AND t.created_at <= '\" + endDate + \"'\" : \"\"}}\nGROUP BY t.payment_channel;"
+                },
+                {
+                    name: "Detailed Ledger Audit",
+                    sql: "SELECT \n    t.id,\n    t.amount,\n    t.currency,\n    t.payment_channel,\n    t.status,\n    t.created_at,\n    tl.action_log\nFROM transactions t\nLEFT JOIN transaction_logs tl ON tl.transaction_id = t.id\nWHERE t.id IN ({{transactionIds}})\n  {{paymentMethod !== 'All Channels' ? \"AND t.payment_channel = '\" + paymentMethod + \"'\" : \"\"}}\n  {{startDate ? \"AND t.created_at >= '\" + startDate + \"'\" : \"\"}}\n  {{endDate ? \"AND t.created_at <= '\" + endDate + \"'\" : \"\"}}\nORDER BY t.created_at DESC;"
+                }
+            ]
+        },
+        {
+            id: "system-audit-logs",
+            name: "System Audit Logs",
+            description: "Examine system modifications, updates, and user event streams.",
+            variables: [
+                { name: "targetTable", label: "Table Name Filter", type: "string", placeholder: "e.g. orders", default: "orders" },
+                { name: "actionType", label: "DB Operation", type: "select", options: ["All Actions", "INSERT", "UPDATE", "DELETE"], default: "All Actions" },
+                { name: "sinceDate", label: "Filter from Date", type: "date", default: "" }
+            ],
+            templates: [
+                {
+                    name: "Operation Log History",
+                    sql: "SELECT \n    al.id,\n    al.performed_by,\n    al.target_table,\n    al.operation,\n    al.old_state,\n    al.new_state,\n    al.created_at\nFROM audit_logs al\nWHERE al.target_table = '{{targetTable}}'\n  {{actionType !== 'All Actions' ? \"AND al.operation = '\" + actionType + \"'\" : \"\"}}\n  {{sinceDate ? \"AND al.created_at >= '\" + sinceDate + \"'\" : \"\"}}\nORDER BY al.created_at DESC;"
+                },
+                {
+                    name: "Operator Performance stats",
+                    sql: "SELECT \n    al.performed_by as operator,\n    COUNT(al.id) as operation_count,\n    MIN(al.created_at) as first_active,\n    MAX(al.created_at) as last_active\nFROM audit_logs al\nWHERE al.target_table = '{{targetTable}}'\n  {{actionType !== 'All Actions' ? \"AND al.operation = '\" + actionType + \"'\" : \"\"}}\n  {{sinceDate ? \"AND al.created_at >= '\" + sinceDate + \"'\" : \"\"}}\nGROUP BY al.performed_by\nORDER BY operation_count DESC;"
+                }
+            ]
+        }
+    ];
+
+    // ----------------------------------------------------
+    // Application State
+    // ----------------------------------------------------
+    let currentGenerator = null;
+    let currentTemplateIdx = 0;
+    let variableState = {}; // Persists inputs: { [variableName]: value }
+
+    // ----------------------------------------------------
+    // DOM Elements
+    // ----------------------------------------------------
+    const searchInput = document.getElementById('searchInput');
+    const generatorList = document.getElementById('generatorList');
+    const generatorTitle = document.getElementById('generatorTitle');
+    const generatorDesc = document.getElementById('generatorDesc');
+    const templatesContainer = document.getElementById('templatesContainer');
+    const variablesForm = document.getElementById('variablesForm');
+    const sqlOutput = document.getElementById('sqlOutput');
+    const activeTemplateName = document.getElementById('activeTemplateName');
+    const copyBtn = document.getElementById('copyBtn');
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    const emptyState = document.getElementById('emptyState');
+    const workspaceGrid = document.getElementById('workspaceGrid');
+
+    // ----------------------------------------------------
+    // Sidebar Rendering & Search Filtering
+    // ----------------------------------------------------
+    function renderSidebar(filter = "") {
+        generatorList.innerHTML = "";
+        const filtered = sqlGenerators.filter(g => 
+            g.name.toLowerCase().includes(filter.toLowerCase()) || 
+            g.description.toLowerCase().includes(filter.toLowerCase())
+        );
+
+        filtered.forEach(gen => {
+            const button = document.createElement('button');
+            button.className = `generator-item ${currentGenerator && currentGenerator.id === gen.id ? 'active' : ''}`;
+            button.onclick = () => selectGenerator(gen);
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = "generator-item-name";
+            nameSpan.textContent = gen.name;
+
+            const descSpan = document.createElement('span');
+            descSpan.className = "generator-item-desc";
+            descSpan.textContent = gen.description;
+
+            button.appendChild(nameSpan);
+            button.appendChild(descSpan);
+            generatorList.appendChild(button);
+        });
+    }
+
+    // ----------------------------------------------------
+    // Select SQL Generator
+    // ----------------------------------------------------
+    function selectGenerator(gen) {
+        currentGenerator = gen;
+        currentTemplateIdx = 0;
+        
+        // Render Header details
+        generatorTitle.textContent = gen.name;
+        generatorDesc.textContent = gen.description;
+
+        // Toggle visibility views
+        emptyState.style.display = "none";
+        workspaceGrid.style.display = "grid";
+
+        // Setup variables default values in state if not exists
+        gen.variables.forEach(v => {
+            if (variableState[v.name] === undefined) {
+                variableState[v.name] = v.default || "";
+            }
+        });
+
+        renderTabs();
+        renderVariablesForm();
+        updateGeneratedSQL();
+        renderSidebar(searchInput.value); // refresh active state
+
+        // Close sidebar on mobile
+        sidebar.classList.remove('open');
+    }
+
+    // ----------------------------------------------------
+    // Render Variation Tabs
+    // ----------------------------------------------------
+    function renderTabs() {
+        templatesContainer.innerHTML = "";
+        currentGenerator.templates.forEach((tpl, idx) => {
+            const tab = document.createElement('button');
+            tab.className = `tab-btn ${idx === currentTemplateIdx ? 'active' : ''}`;
+            tab.textContent = tpl.name;
+            tab.onclick = () => {
+                currentTemplateIdx = idx;
+                document.querySelectorAll('.tab-btn').forEach((btn, bIdx) => {
+                    btn.classList.toggle('active', bIdx === idx);
+                });
+                activeTemplateName.textContent = `Generated SQL: ${tpl.name}`;
+                updateGeneratedSQL();
+            };
+            templatesContainer.appendChild(tab);
+        });
+
+        activeTemplateName.textContent = `Generated SQL: ${currentGenerator.templates[currentTemplateIdx].name}`;
+    }
+
+    // ----------------------------------------------------
+    // Render Variables Input Controls & Helper Utilities
+    // ----------------------------------------------------
+    function renderVariablesForm() {
+        variablesForm.innerHTML = "";
+        
+        currentGenerator.variables.forEach(variable => {
+            const group = document.createElement('div');
+            group.className = "form-group";
+
+            // Row for label
+            const labelRow = document.createElement('div');
+            labelRow.className = "form-label-row";
+            
+            const label = document.createElement('label');
+            label.className = "form-label";
+            label.textContent = variable.label || variable.name;
+            labelRow.appendChild(label);
+            group.appendChild(labelRow);
+
+            // Control & utilities container
+            let inputControl;
+            const helperContainer = document.createElement('div');
+            helperContainer.className = "input-helpers";
+
+            if (variable.type === "select") {
+                inputControl = document.createElement('select');
+                inputControl.className = "form-control";
+                variable.options.forEach(opt => {
+                    const optElem = document.createElement('option');
+                    optElem.value = opt;
+                    optElem.textContent = opt;
+                    if (variableState[variable.name] === opt) {
+                        optElem.selected = true;
+                    }
+                    inputControl.appendChild(optElem);
+                });
+            } else if (variable.type === "list") {
+                inputControl = document.createElement('textarea');
+                inputControl.className = "form-control";
+                inputControl.placeholder = variable.placeholder || "Enter values...";
+                inputControl.value = variableState[variable.name];
+
+                // List-specific utility buttons
+                const btnStrings = document.createElement('button');
+                btnStrings.className = "helper-btn";
+                btnStrings.innerHTML = `<i data-lucide="quote" size="12"></i> SQL Lists (Strings)`;
+                btnStrings.onclick = (e) => {
+                    e.preventDefault();
+                    formatTextareaAsSqlList(inputControl, true);
+                };
+
+                const btnNums = document.createElement('button');
+                btnNums.className = "helper-btn";
+                btnNums.innerHTML = `<i data-lucide="binary" size="12"></i> SQL Lists (Numbers)`;
+                btnNums.onclick = (e) => {
+                    e.preventDefault();
+                    formatTextareaAsSqlList(inputControl, false);
+                };
+
+                helperContainer.appendChild(btnStrings);
+                helperContainer.appendChild(btnNums);
+            } else {
+                // date, datetime, string/text
+                inputControl = document.createElement('input');
+                inputControl.className = "form-control";
+                inputControl.type = variable.type === "datetime" ? "datetime-local" : variable.type === "date" ? "date" : "text";
+                inputControl.placeholder = variable.placeholder || "";
+                inputControl.value = variableState[variable.name];
+
+                // Date-specific utility buttons
+                if (variable.type === "date") {
+                    const todayBtn = document.createElement('button');
+                    todayBtn.className = "helper-btn";
+                    todayBtn.textContent = "Today";
+                    todayBtn.onclick = (e) => {
+                        e.preventDefault();
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        inputControl.value = todayStr;
+                        updateValue(variable.name, todayStr);
+                    };
+
+                    const yesterdayBtn = document.createElement('button');
+                    yesterdayBtn.className = "helper-btn";
+                    yesterdayBtn.textContent = "Yesterday";
+                    yesterdayBtn.onclick = (e) => {
+                        e.preventDefault();
+                        const d = new Date();
+                        d.setDate(d.getDate() - 1);
+                        const yestStr = d.toISOString().split('T')[0];
+                        inputControl.value = yestStr;
+                        updateValue(variable.name, yestStr);
+                    };
+
+                    const startOfMonthBtn = document.createElement('button');
+                    startOfMonthBtn.className = "helper-btn";
+                    startOfMonthBtn.textContent = "Start of Month";
+                    startOfMonthBtn.onclick = (e) => {
+                        e.preventDefault();
+                        const d = new Date();
+                        const firstDayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+                        inputControl.value = firstDayStr;
+                        updateValue(variable.name, firstDayStr);
+                    };
+
+                    helperContainer.appendChild(todayBtn);
+                    helperContainer.appendChild(yesterdayBtn);
+                    helperContainer.appendChild(startOfMonthBtn);
+                }
+
+                // Datetime-specific utility buttons
+                if (variable.type === "datetime") {
+                    const nowBtn = document.createElement('button');
+                    nowBtn.className = "helper-btn";
+                    nowBtn.textContent = "Now";
+                    nowBtn.onclick = (e) => {
+                        e.preventDefault();
+                        const localISO = getLocalDateTimeString();
+                        inputControl.value = localISO;
+                        updateValue(variable.name, localISO);
+                    };
+
+                    const todayStartBtn = document.createElement('button');
+                    todayStartBtn.className = "helper-btn";
+                    todayStartBtn.textContent = "Today Start";
+                    todayStartBtn.onclick = (e) => {
+                        e.preventDefault();
+                        const localISO = new Date().toISOString().split('T')[0] + "T00:00";
+                        inputControl.value = localISO;
+                        updateValue(variable.name, localISO);
+                    };
+
+                    helperContainer.appendChild(nowBtn);
+                    helperContainer.appendChild(todayStartBtn);
+                }
+            }
+
+            // Bind values update
+            inputControl.oninput = (e) => {
+                updateValue(variable.name, e.target.value);
+            };
+            inputControl.onchange = (e) => {
+                updateValue(variable.name, e.target.value);
+            };
+
+            group.appendChild(inputControl);
+            if (helperContainer.children.length > 0) {
+                group.appendChild(helperContainer);
+            }
+            variablesForm.appendChild(group);
+        });
+
+        // Initialize icons
+        lucide.createIcons();
+    }
+
+    // Helper to get local date ISO string compatible with datetime-local
+    function getLocalDateTimeString() {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const date = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${date}T${hours}:${minutes}`;
+    }
+
+    // Helper to format text input strings to CSV list
+    function formatTextareaAsSqlList(textarea, isString) {
+        const lines = textarea.value.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+
+        if (lines.length === 0) return;
+
+        let formatted;
+        if (isString) {
+            formatted = lines.map(line => `'${line.replace(/'/g, "''")}'`).join(', ');
+        } else {
+            formatted = lines.map(line => {
+                const num = parseFloat(line);
+                return isNaN(num) ? `'${line.replace(/'/g, "''")}'` : num;
+            }).join(', ');
+        }
+
+        textarea.value = formatted;
+        const varName = textarea.parentElement.querySelector('label').textContent;
+        // Search name key back
+        const variable = currentGenerator.variables.find(v => v.label === varName || v.name === varName);
+        if (variable) {
+            updateValue(variable.name, formatted);
+        }
+    }
+
+    function updateValue(name, val) {
+        variableState[name] = val;
+        updateGeneratedSQL();
+    }
+
+    // ----------------------------------------------------
+    // Template Engine: Substitute and format SQL
+    // ----------------------------------------------------
+    function updateGeneratedSQL() {
+        if (!currentGenerator) return;
+
+        const activeTpl = currentGenerator.templates[currentTemplateIdx];
+        let sqlTemplate = activeTpl.sql;
+
+        // Clean & resolve conditional blocks inside {{ ... }}
+        // e.g. {{joinedAfter ? "AND u.created_at >= '" + joinedAfter + "'" : ""}}
+        const blockRegex = /\{\{([\s\S]+?)\}\}/g;
+        let generatedSql = sqlTemplate.replace(blockRegex, (match, expression) => {
+            try {
+                // Inject current variables state as local scoped context variables for simple evaluation
+                const evalFunc = new Function(...Object.keys(variableState), `return (${expression});`);
+                const result = evalFunc(...Object.values(variableState));
+                return result !== undefined ? result : "";
+            } catch (err) {
+                // If it fails to evaluate as javascript expression, try direct variable key substitution
+                const cleanKey = expression.trim();
+                if (variableState[cleanKey] !== undefined) {
+                    return variableState[cleanKey];
+                }
+                return `/* ERROR: ${err.message} */`;
+            }
+        });
+
+        // Syntax highlighting rendering
+        sqlOutput.innerHTML = highlightSQL(generatedSql);
+    }
+
+    // ----------------------------------------------------
+    // Live SQL Syntax Highlighter
+    // ----------------------------------------------------
+    function highlightSQL(sql) {
+        // Safe HTML characters escaping
+        let escaped = sql
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        // Highlights keywords, comments, strings, variables and numbers
+        const keywords = [
+            "SELECT", "FROM", "WHERE", "AND", "OR", "ON", "INNER JOIN", "LEFT JOIN", 
+            "RIGHT JOIN", "JOIN", "GROUP BY", "ORDER BY", "LIMIT", "IN", "AS", 
+            "INSERT INTO", "UPDATE", "SET", "DELETE", "COUNT", "SUM", "MIN", "MAX", "DESC"
+        ];
+
+        // Format rules inside HTML
+        // 1. Comments: -- comment
+        escaped = escaped.replace(/(--.*)/g, '<span class="sql-comment">$1</span>');
+
+        // 2. Strings: '...' or "..."
+        escaped = escaped.replace(/('(?:''|[^'])*')/g, '<span class="sql-string">$1</span>');
+
+        // 3. Keywords: case insensitive search matching whole words
+        keywords.forEach(keyword => {
+            const regex = new RegExp(`\\b(${keyword})\\b`, 'gi');
+            escaped = escaped.replace(regex, '<span class="sql-keyword">$1</span>');
+        });
+
+        // 4. Numbers: match digits not part of word keys
+        escaped = escaped.replace(/\b(\d+)\b/g, '<span class="sql-number">$1</span>');
+
+        return escaped;
+    }
+
+    // ----------------------------------------------------
+    // User Action: Copy to Clipboard
+    // ----------------------------------------------------
+    async function copyToClipboard() {
+        // Fetch raw generated code value (textContent bypasses highlighting HTML spans)
+        const sqlText = sqlOutput.textContent;
+        if (!sqlText) return;
+
+        try {
+            await navigator.clipboard.writeText(sqlText);
+            
+            // UI Visual Feedback
+            copyBtn.classList.add('copied');
+            const spanText = copyBtn.querySelector('span');
+            const originalHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = `<i data-lucide="check" size="16"></i> <span>Copied!</span>`;
+            lucide.createIcons();
+
+            setTimeout(() => {
+                copyBtn.classList.remove('copied');
+                copyBtn.innerHTML = originalHTML;
+                lucide.createIcons();
+            }, 2000);
+        } catch (err) {
+            console.error("Failed to copy string: ", err);
+        }
+    }
+
+    // ----------------------------------------------------
+    // Event listeners & Search binder
+    // ----------------------------------------------------
+    searchInput.addEventListener('input', (e) => {
+        renderSidebar(e.target.value);
+    });
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+    });
+
+    copyBtn.addEventListener('click', copyToClipboard);
+
+    // Initial load
+    renderSidebar();
+    lucide.createIcons();
+</script>
+</body>
+</html>
