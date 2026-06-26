@@ -644,6 +644,24 @@
             ]
         },
         {
+            id: "employee-passport-lookup",
+            name: "Employee Passport Lookup",
+            description: "Retrieve licence details and associated company users using an employee's passport number.",
+            variables: [
+                { name: "passportNo", label: "Passport No", type: "string", placeholder: "e.g. X6945991", default: "X6945991" }
+            ],
+            templates: [
+                {
+                    name: "Get Licence Details",
+                    sql: "SELECT 'fwtalicence' AS type, \n    fle.fwta_licence_application_id AS id, \n    CONCAT(fla.license_number, ' [', fla.rujukan_no, ']') AS number, \n    fla.fwta_company_id, \n    fc.name AS comp_name \nFROM evdr.fwta_employees fe\nINNER JOIN evdr.fwta_licence_employees fle ON fe.id = fle.fwta_employee_id \nINNER JOIN evdr.fwta_licence_applications fla ON fla.id = fle.fwta_licence_application_id\nINNER JOIN evdr.fwta_companies fc ON fc.id = fla.fwta_company_id \nWHERE fe.passport_number = '{{passportNo}}'\nUNION\nSELECT 'evdrlicence' AS type,\n    l.id,\n    l.license_number AS number, \n    l.company_id, \n    c.name \nFROM evdr.license_workers lw\nINNER JOIN evdr.licenses l ON lw.license_id = l.id\nINNER JOIN evdr.companies c ON c.id = l.company_id \nWHERE lw.passport_number = '{{passportNo}}';"
+                },
+                {
+                    name: "Get Company User",
+                    sql: "SELECT 'evdrlicence' AS type, \n    cu.company_id, \n    c.name, \n    u.email, \n    u.name  \nFROM evdr.licenses l \nINNER JOIN evdr.license_workers lw ON lw.license_id = l.id     \nINNER JOIN evdr.company_user cu ON cu.company_id = l.company_id \nINNER JOIN evdr.companies c ON c.id = cu.company_id\nINNER JOIN evdr.users u ON u.id = cu.user_id \nWHERE lw.passport_number = '{{passportNo}}'\nUNION\nSELECT 'fwtalicence' AS type,\n    fcu.fwta_company_id,\n    fc.name,\n    u.email, \n    u.name  \nFROM evdr.fwta_employees fe\nINNER JOIN evdr.fwta_company_users fcu ON fcu.fwta_company_id = fe.fwta_company_id\nINNER JOIN evdr.fwta_companies fc on fc.id = fe.fwta_company_id\nINNER JOIN evdr.users u ON u.id = fcu.user_id \nWHERE fe.passport_number = '{{passportNo}}';"
+                }
+            ]
+        },
+        {
             id: "user-company-details",
             name: "User & Company Details",
             description: "Retrieve complete user profile details aligned with their company parameters.",
