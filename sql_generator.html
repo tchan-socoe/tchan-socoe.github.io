@@ -626,6 +626,24 @@
     // ----------------------------------------------------
     const sqlGenerators = [
         {
+            id: "license-number-details",
+            name: "License Number -> Details",
+            description: "Retrieve license number, company name, and company user emails by license number.",
+            variables: [
+                { name: "licenseNumber", label: "License Number", type: "string", placeholder: "e.g. UVGQ5F-TPQ-01", default: "UVGQ5F-TPQ-01" }
+            ],
+            templates: [
+                {
+                    name: "License Details",
+                    sql: "SELECT fla.license_number \nFROM evdr.fwta_licence_applications fla \nWHERE fla.license_number = '{{licenseNumber}}'\nUNION\nSELECT fc.name \nFROM evdr.fwta_licence_applications fla \nJOIN evdr.fwta_companies fc ON fc.id = fla.fwta_company_id \nWHERE fla.license_number = '{{licenseNumber}}'\nUNION\nSELECT u.email \nFROM evdr.fwta_licence_applications fla \nJOIN evdr.fwta_company_users fcu ON fcu.fwta_company_id  = fla.fwta_company_id \nJOIN evdr.users u ON u.id = fcu.user_id \nWHERE fla.license_number = '{{licenseNumber}}';"
+                },
+                {
+                    name: "VDR Details",
+                    sql: "SELECT l.license_number \nFROM licenses l\nWHERE l.license_number = '{{licenseNumber}}'\nUNION\nSELECT ea.application_no \nFROM licenses l\nJOIN evdr_applications ea ON ea.license_id  = l.id\nWHERE l.license_number = '{{licenseNumber}}'\nUNION\nSELECT u.email \nFROM licenses l\nJOIN company_user cu ON cu.company_id = l.company_id\nJOIN users u ON u.id = cu.user_id \nWHERE l.license_number = '{{licenseNumber}}';"
+                }
+            ]
+        },
+        {
             id: "ap-application-info",
             name: "AP Application Info",
             description: "Query company users and profile details associated with an AP Application Number.",
