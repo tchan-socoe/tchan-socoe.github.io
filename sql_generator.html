@@ -626,6 +626,24 @@
     // ----------------------------------------------------
     const sqlGenerators = [
         {
+            id: "ap-no-addresses",
+            name: "AP No -> Addresses",
+            description: "Retrieve address and project info associated with an AP Application Number.",
+            variables: [
+                { name: "applicationNo", label: "Application No", type: "string", placeholder: "e.g. AAP/2024/004083", default: "AAP/2024/004083" }
+            ],
+            templates: [
+                {
+                    name: "Address in Application",
+                    sql: "select aa.id,aa.company_workplaces \nfrom evdr.ap_applications aa \nwhere aa.application_no ='{{applicationNo}}';"
+                },
+                {
+                    name: "Project Address",
+                    sql: "select id,aad.`key` ,aad.value\nfrom evdr.ap_application_data aad\njoin evdr.ap_applications aa on aad.application_id = aa.id \nwhere aa.application_no ='{{applicationNo}}'\nand aad.deleted_at is null\nand aad.`key` like '01_business_activity|projects|%'\nand right(aad.`key`,12) in ('ace_district','projectTitle','addressLine1','addressLine2')"
+                }
+            ]
+        },
+        {
             id: "license-number-details",
             name: "License Number -> Details",
             description: "Retrieve license number, company name, and company user emails by license number.",
